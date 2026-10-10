@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>M-Pesa Trader | Virtual Trading Platform</title>
+<style>
+  :root {
+    --green: #0B6E4F;
+    --green-dark: #084D37;
+    --red: #C62828;
+    --bg: #0F1419;
+    --card: #1A2027;
+    --border: #2A323C;
+    --text: #E6EDF3;
+    --muted: #8B96A5;
+    --accent: #26A69A;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; }
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--green), var(--accent));
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .wallet-badge {
+    background: var(--green);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  /* ─── LAYOUT ─── */
+  .main {
+    display: grid;
+    grid-template-columns: 280px 1fr 340px;
+    gap: 16px;
+    padding: 16px;
+    flex: 1;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+  }
+
+  .card h3 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  /* ─── LEFT PANEL: WALLET + M-PESA ─── */
+  .balance-card {
+    background: linear-gradient(135deg, var(--green), var(--green-dark));
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .balance-label { font-size: 12px; color: rgba(255,255,255,0.7); }
+  .balance-amount { font-size: 28px; font-weight: 700; margin-top: 6px; }
+  .balance-sub { font-size: 12px; color: rgba(255,255,255,0.7); margin-top: 8px; }
+
+  .input-group { margin-bottom: 12px; }
+  .input-group label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .input-group input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    color: var(--text);
+    font-size: 14px;
+    outline: none;
+    transition: border 0.2s;
+  }
+  .input-group input:focus { border-color: var(--green); }
+
+  .btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+  .btn:hover { opacity: 0.9; }
+  .btn:active { transform: scale(0.98); }
+  .btn-green { background: var(--green); color: #fff; }
+  .btn-red { background: var(--red); color: #fff; }
+  .btn-outline {
+    background: transparent;
+    border: 2px solid var(--border);
+    color: var(--text);
+  }
+
+  /* ─── CENTER: CHART + ORDER BOOK ─── */
+  .symbol-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .symbol-tab {
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    transition: all 0.2s;
+  }
+  .symbol-tab.active {
+    background: var(--green);
+    color: #fff;
+    border-color: var(--green);
+  }
+
+  .price-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 16px;
+  }
+  .price-current { font-size: 32px; font-weight: 700; }
+  .price-change { font-size: 14px; font-weight: 600; }
+  .price-change.up { color: var(--accent); }
+  .price-change.down { color: var(--red); }
+
+  #chart {
+    width: 100%;
+    height: 220px;
+    background: var(--bg);
+    border-radius: 8px;
+    margin-bottom: 16px;
+  }
+
+  /* ─── ORDER BOOK ─── */
+  .book {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .book-col h4 {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  .book-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 8px;
+    font-size: 13px;
+    font-family: 'Courier New', monospace;
+    border-radius: 4px;
+  }
+  .book-row.bid { color: var(--accent); }
+  .book-row.ask { color: var(--red); }
+  .book-row:hover { background: rgba(255,255,255,0.03); }
+
+  .spread {
+    text-align: center;
+    padding: 8px;
+    font-size: 12px;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    margin: 8px 0;
+  }
+
+  /* ─── RIGHT: ORDER FORM + PORTFOLIO ─── */
+  .order-side-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .side-tab {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 13px;
+  }
+  .side-tab.buy.active { background: var(--green); color: #fff; border-color: var(--green); }
+  .side-tab.sell.active { background: var(--red); color: #fff; border-color: var(--red); }
+
+  .holdings-list { display: flex; flex-direction: column; gap: 8px; }
+  .holding-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    background: var(--bg);
+    border-radius: 8px;
+    font-size: 13px;
+  }
+  .holding-sym { font-weight: 700; }
+  .holding-pnl.up { color: var(--accent); }
+  .holding-pnl.down { color: var(--red); }
+
+  .empty-state {
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    padding: 20px 0;
+  }
+
+  /* ─── TOAST ─── */
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--green);
+    padding: 14px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    display: none;
+    z-index: 999;
+    max-width: 320px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+  #toast.error { border-left-color: var(--red); }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 1024px) {
+    .main { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">⚡</div>
+    <span>M-Pesa Trader</span>
+  </div>
+  <div class="wallet-badge">KES <span id="headerBalance">0</span></div>
+</header>
+
+<div class="main">
+
+  <!-- ═══════════ LEFT: WALLET + M-PESA DEPOSIT ═══════════ -->
+  <aside>
+    <div class="balance-card">
+      <div class="balance-label">Available Balance</div>
+      <div class="balance-amount">KES <span id="balance">0</span></div>
+      <div class="balance-sub">Net worth: KES <span id="netWorth">0</span></div>
+    </div>
+
+    <div class="card">
+      <h3>💳 Deposit via M-Pesa</h3>
+      <div class="input-group">
+        <label>M-Pesa Phone</label>
+        <input type="tel" id="mpesaPhone" placeholder="254712345678" />
+      </div>
+      <div class="input-group">
+        <label>Amount (KES)</label>
+        <input type="number" id="depositAmount" placeholder="1000" />
+      </div>
+      <button class="btn btn-green" onclick="handleDeposit()">Send STK Push</button>
+    </div>
+
+    <div class="card" style="margin-top: 16px;">
+      <h3>📊 Portfolio</h3>
+      <div class="holdings-list" id="holdingsList">
+        <div class="empty-state">No holdings yet</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══════════ CENTER: CHART + ORDER BOOK ═══════════ -->
+  <main>
+    <div class="card">
+      <div class="symbol-tabs" id="symbolTabs"></div>
+      <div class="price-header">
+        <div>
+          <div class="price-current">$<span id="livePrice">—</span></div>
+          <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">
+            Simulated order book · live Binance feed
+          </div>
+        </div>
+        <div class="price-change up" id="priceChange">+0.00%</div>
+      </div>
+      <canvas id="chart"></canvas>
+    </div>
+
+    <div class="card" style="margin-top: 16px;">
+      <h3>📖 Order Book</h3>
+      <div class="book">
+        <div class="book-col">
+          <h4>Bids (Buy)</h4>
+          <div id="bidsList"></div>
+        </div>
+        <div class="book-col">
+          <h4>Asks (Sell)</h4>
+          <div id="asksList"></div>
+        </div>
+      </div>
+      <div class="spread" id="spread">Spread: —</div>
+    </div>
+  </main>
+
+  <!-- ═══════════ RIGHT: ORDER FORM + TRADES ═══════════ -->
+  <aside>
+    <div class="card">
+      <h3>🎯 Place Order</h3>
+      <div class="order-side-tabs">
+        <button class="side-tab buy active" id="buyTab" onclick="setSide('buy')">BUY</button>
+        <button class="side-tab sell" id="sellTab" onclick="setSide('sell')">SELL</button>
+      </div>
+
+      <div class="input-group">
+        <label>Limit Price (USD)</label>
+        <input type="number" id="orderPrice" step="0.01" />
+      </div>
+      <div class="input-group">
+        <label>Quantity</label>
+        <input type="number" id="orderQty" step="0.0001" />
+      </div>
+      <div class="input-group">
+        <label>Total</label>
+        <input type="text" id="orderTotal" readonly value="$0.00" />
+      </div>
+
+      <button class="btn btn-green" id="submitOrderBtn" onclick="submitOrder()">
+        Place Buy Order
+      </button>
+    </div>
+
+    <div class="card" style="margin-top: 16px;">
+      <h3>⚡ Recent Trades</h3>
+      <div id="tradesList">
+        <div class="empty-state">No trades yet</div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<div id="toast"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   STATE
+   ═══════════════════════════════════════════════════════════ */
+const state = {
+  balance: 100000,          // starting demo balance (KES)
+  holdings: {},             // { BTCUSDT: { qty, avgPrice } }
+  symbol: 'BTCUSDT',
+  side: 'buy',
+  prices: {},               // live prices
+  prevPrices: {},
+  books: {},                // local simulated order books
+  trades: [],
+  userId: 'user_' + Math.random().toString(36).slice(2, 8),
+};
+
+const SYMBOLS = ['BTCUSDT', 'ETHUSDT', 'SOLUSDT'];
+const BASE_PRICES = { BTCUSDT: 95000, ETHUSDT: 3400, SOLUSDT: 180 };
+
+/* ═══════════════════════════════════════════════════════════
+   MOCK PRICE FEED (replace with real backend WebSocket)
+   In production: const ws = new WebSocket('ws://localhost:4000');
+   ═══════════════════════════════════════════════════════════ */
+function startPriceFeed() {
+  // Seed initial prices
+  SYMBOLS.forEach(s => { state.prices[s] = BASE_PRICES[s]; });
+
+  setInterval(() => {
+    SYMBOLS.forEach(s => {
+      state.prevPrices[s] = state.prices[s];
+      // Random walk ±0.3%
+      const drift = (Math.random() - 0.5) * 0.006;
+      state.prices[s] = Math.max(1, state.prices[s] * (1 + drift));
+    });
+
+    // Rebuild order book around new price
+    rebuildBooks();
+    renderAll();
+  }, 2000);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SIMULATED ORDER BOOK (client-side)
+   In production: fetch from /api/depth/:symbol
+   ═══════════════════════════════════════════════════════════ */
+function rebuildBooks() {
+  SYMBOLS.forEach(sym => {
+    const mid = state.prices[sym];
+    const bids = [];
+    const asks = [];
+    for (let i = 1; i <= 8; i++) {
+      bids.push({
+        price: +(mid * (1 - i * 0.0008)).toFixed(2),
+        quantity: +(Math.random() * 2 + 0.1).toFixed(4),
+      });
+      asks.push({
+        price: +(mid * (1 + i * 0.0008)).toFixed(2),
+        quantity: +(Math.random() * 2 + 0.1).toFixed(4),
+      });
+    }
+    state.books[sym] = { bids, asks };
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RENDER FUNCTIONS
+   ═══════════════════════════════════════════════════════════ */
+function renderAll() {
+  renderHeader();
+  renderWallet();
+  renderSymbolTabs();
+  renderPrice();
+  renderOrderBook();
+  renderHoldings();
+  renderTrades();
+  drawChart();
+}
+
+function renderHeader() {
+  document.getElementById('headerBalance').textContent =
+    state.balance.toLocaleString('en-KE', { maximumFractionDigits: 0 });
+}
+
+function renderWallet() {
+  document.getElementById('balance').textContent =
+    state.balance.toLocaleString('en-KE', { maximumFractionDigits: 0 });
+
+  const holdingsValue = Object.entries(state.holdings).reduce((sum, [sym, h]) => {
+    return sum + h.qty * (state.prices[sym] || 0);
+  }, 0);
+
+  document.getElementById('netWorth').textContent =
+    (state.balance + holdingsValue).toLocaleString('en-KE', { maximumFractionDigits: 0 });
+}
+
+function renderSymbolTabs() {
+  const container = document.getElementById('symbolTabs');
+  if (container.dataset.built) return;
+  container.dataset.built = '1';
+  container.innerHTML = SYMBOLS.map(s =>
+    `<button class="symbol-tab ${s === state.symbol ? 'active' : ''}"
+      onclick="selectSymbol('${s}')">${s.replace('USDT', '/USDT')}</button>`
+  ).join('');
+}
+
+function selectSymbol(sym) {
+  state.symbol = sym;
+  document.querySelectorAll('.symbol-tab').forEach(el => {
+    el.classList.toggle('active', el.textContent.includes(sym.replace('USDT', '')));
+  });
+  renderAll();
+}
+
+function renderPrice() {
+  const sym = state.symbol;
+  const price = state.prices[sym] || 0;
+  const prev = state.prevPrices[sym] || price;
+  const change = prev ? ((price - prev) / prev) * 100 : 0;
+
+  document.getElementById('livePrice').textContent =
+    price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const changeEl = document.getElementById('priceChange');
+  changeEl.textContent = ${change >= 0 ? '+' : ''}${change.toFixed(2)}%;
+  changeEl.className = 'price-change ' + (change >= 0 ? 'up' : 'down');
+
+  // Prefill order price
+  const priceInput = document.getElementById('orderPrice');
+  if (!priceInput.value) priceInput.value = price.toFixed(2);
+}
+
+function renderOrderBook() {
+  const book = state.books[state.symbol];
+  if (!book) return;
+
+  document.getElementById('bidsList').innerHTML = book.bids
+    .slice(0, 6)
+    .map(b => `<div class="book-row bid">
+      <span>${b.price.toLocaleString()}</span>
+      <span>${b.quantity}</span>
+    </div>`).join('');
+
+  document.getElementById('asksList').innerHTML = book.asks
+    .slice(0, 6)
+    .map(a => `<div class="book-row ask">
+      <span>${a.price.toLocaleString()}</span>
+      <span>${a.quantity}</span>
+    </div>`).join('');
+
+  const bestBid = book.bids[0]?.price || 0;
+  const bestAsk = book.asks[0]?.price || 0;
+  const spread = bestAsk - bestBid;
+  document.getElementById('spread').textContent =
+    Spread: $${spread.toFixed(2)} · Best Bid $${bestBid.toLocaleString()} · Best Ask $${bestAsk.toLocaleString()};
+}
+
+function renderHoldings() {
+  const list = document.getElementById('holdingsList');
+  const entries = Object.entries(state.holdings);
+
+  if (!entries.length) {
+    list.innerHTML = '<div class="empty-state">No holdings yet</div>';
+    return;
+  }
+
+  list.innerHTML = entries.map(([sym, h]) => {
+    const value = h.qty * (state.prices[sym] || 0);
+    const cost = h.qty * h.avgPrice;
+    const pnl = value - cost;
+    const pnlPct = cost ? (pnl / cost) * 100 : 0;
+    const cls = pnl >= 0 ? 'up' : 'down';
+    const sign = pnl >= 0 ? '+' : '';
+    return `<div class="holding-row">
+      <div>
+        <div class="holding-sym">${sym.replace('USDT', '')}</div>
+        <div style="font-size:11px;color:var(--muted)">${h.qty.toFixed(4)} @ $${h.avgPrice.toFixed(2)}</div>
+      </div>
+      <div style="text-align:right">
+        <div>$${value.toFixed(2)}</div>
+        <div class="holding-pnl ${cls}" style="font-size:11px">${sign}${pnl.toFixed(2)} (${sign}${pnlPct.toFixed(2)}%)</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderTrades() {
+  const list = document.getElementById('tradesList');
+  const recent = state.trades.slice(-6).reverse();
+  if (!recent.length) {
+    list.innerHTML = '<div class="empty-state">No trades yet</div>';
+    return;
+  }
+  list.innerHTML = recent.map(t => `
+    <div class="book-row ${t.side === 'buy' ? 'bid' : 'ask'}">
+      <span>${t.side.toUpperCase()} ${t.qty.toFixed(4)} ${t.symbol.replace('USDT','')}</span>
+      <span>$${t.price.toFixed(2)}</span>
+    </div>
+  `).join('');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   CHART (Canvas — lightweight sparkline)
+   ═══════════════════════════════════════════════════════════ */
+const chartHistory = {};
+function drawChart() {
+  const canvas = document.getElementById('chart');
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = canvas.offsetWidth * dpr;
+  canvas.height = canvas.offsetHeight * dpr;
+  ctx.scale(dpr, dpr);
+
+  const w = canvas.offsetWidth;
+  const h = canvas.offsetHeight;
+
+  const sym = state.symbol;
+  if (!chartHistory[sym]) chartHistory[sym] = [];
+  chartHistory[sym].push(state.prices[sym]);
+  if (chartHistory[sym].length > 60) chartHistory[sym].shift();
+
+  const data = chartHistory[sym];
+  if (data.length < 2) return;
+
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+
+  ctx.clearRect(0, 0, w, h);
+
+  // Grid
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = (h / 4) * i;
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(w, y);
+    ctx.stroke();
+  }
+
+  // Line
+  const isUp = data[data.length - 1] >= data[0];
+  ctx.strokeStyle = isUp ? '#26A69A' : '#C62828';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  data.forEach((p, i) => {
+    const x = (i / (data.length - 1)) * w;
+    const y = h - ((p - min) / range) * (h - 20) - 10;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+
+  // Gradient fill
+  const grad = ctx.createLinearGradient(0, 0, 0, h);
+  grad.addColorStop(0, isUp ? 'rgba(38,166,154,0.3)' : 'rgba(198,40,40,0.3)');
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = grad;
+  ctx.lineTo(w, h);
+  ctx.lineTo(0, h);
+  ctx.closePath();
+  ctx.fill();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   M-PESA DEPOSIT (A)
+   In production: POST /api/deposit → Safaricom STK Push
+   ═══════════════════════════════════════════════════════════ */
+async function handleDeposit() {
+  const phone = document.getElementById('mpesaPhone').value.trim();
+  const amount = Number(document.getElementById('depositAmount').value);
+
+  if (!/^254\d{9}$/.test(phone)) {
+    return showToast('Enter valid phone: 2547XXXXXXXX', true);
+  }
+  if (!amount || amount < 10) {
+    return showToast('Minimum deposit is KES 10', true);
+  }
+
+  showToast('📱 STK Push sent! Check your phone...');
+
+  // ─── REAL BACKEND CALL (uncomment when Node server is running) ───
+  // try {
+  //   await fetch('http://localhost:4000/api/deposit', {
+  //     method: 'POST',
+  //     headers: { 'Content-Type': 'application/json' },
+  //     body: JSON.stringify({ phone, amount }),
+  //   });
+  // } catch (e) { return showToast('Backend error: ' + e.message, true); }
+
+  // Simulate callback delay
+  setTimeout(() => {
+    state.balance += amount;
+    showToast(✅ KES ${amount.toLocaleString()} deposited);
+    document.getElementById('depositAmount').value = '';
+    renderAll();
+  }, 2500);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ORDER PLACEMENT (B)
+   In production: POST /api/order → matching engine
+   ═══════════════════════════════════════════════════════════ */
+function setSide(side) {
+  state.side = side;
+  document.getElementById('buyTab').classList.toggle('active', side === 'buy');
+  document.getElementById('sellTab').classList.toggle('active', side === 'sell');
+  const btn = document.getElementById('submitOrderBtn');
+  btn.textContent = side === 'buy' ? 'Place Buy Order' : 'Place Sell Order';
+  btn.className = 'btn ' + (side === 'buy' ? 'btn-green' : 'btn-red');
+}
+
+// Live total calculation
+document.addEventListener('input', (e) => {
+  if (e.target.id === 'orderPrice' || e.target.id === 'orderQty') {
+    const p = Number(document.getElementById('orderPrice').value) || 0;
+    const q = Number(document.getElementById('orderQty').value) || 0;
+    document.getElementById('orderTotal').value = $${(p * q).toFixed(2)};
+  }
+});
+
+function submitOrder() {
+  const sym = state.symbol;
+  const price = Number(document.getElementById('orderPrice').value);
+  const qty = Number(document.getElementById('orderQty').value);
+
+  if (!price || !qty || qty <= 0) {
+    return showToast('Enter valid price and quantity', true);
+  }
+
+  const cost = price * qty;
+  const holding = state.holdings[sym] || { qty: 0, avgPrice: 0 };
+
+  if (state.side === 'buy') {
+    if (cost > state.balance) return showToast('Insufficient balance', true);
+
+    // Simulate immediate fill at best ask
+    const bestAsk = state.books[sym]?.asks[0]?.price || price;
+    const fillPrice = Math.min(price, bestAsk);
+
+    state.balance -= fillPrice * qty;
+    const newQty = holding.qty + qty;
+    const newAvg = (holding.qty * holding.avgPrice + fillPrice * qty) / newQty;
+    state.holdings[sym] = { qty: newQty, avgPrice: newAvg };
+
+    state.trades.push({ symbol: sym, side: 'buy', price: fillPrice, qty });
+    showToast(✅ Bought ${qty} ${sym.replace('USDT','')} @ $${fillPrice.toFixed(2)});
+
+  } else {
+    if (holding.qty < qty) return showToast('Not enough holdings to sell', true);
+
+    const bestBid = state.books[sym]?.bids[0]?.price || price;
+    const fillPrice = Math.max(price, bestBid);
+
+    state.balance += fillPrice * qty;
+    const newQty = holding.qty - qty;
+
+    if (newQty === 0) delete state.holdings[sym];
+    else state.holdings[sym] = { ...holding, qty: newQty };
+
+    state.trades.push({ symbol: sym, side: 'sell', price: fillPrice, qty });
+    showToast(✅ Sold ${qty} ${sym.replace('USDT','')} @ $${fillPrice.toFixed(2)});
+  }
+
+  document.getElementById('orderQty').value = '';
+  document.getElementById('orderTotal').value = '$0.00';
+  renderAll();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TOAST
+   ═══════════════════════════════════════════════════════════ */
+let toastTimer;
+function showToast(msg, isError = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = isError ? 'error' : '';
+  el.style.display = 'block';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.style.display = 'none'; }, 3000);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BOOT
+   ═══════════════════════════════════════════════════════════ */
+startPriceFeed();
+rebuildBooks();
+renderAll();
+window.addEventListener('resize', drawChart);
+</script>
+</body>
+</html>
